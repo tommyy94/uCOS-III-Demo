@@ -283,6 +283,7 @@ void  BSP_IntInit (void)
     }
 
     BSP_IntVectSet(BSP_INT_ID_USART2, USART2_IRQHandler);
+    BSP_IntVectSet(BSP_INT_ID_USART3, USART3_IRQHandler);
 }
 
 

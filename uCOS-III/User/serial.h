@@ -5,9 +5,7 @@
 *
 * Filename      : serial.h
 *********************************************************************************************************
-* Note(s)       : (1) This module abstracts STM32F107VC UART. It aims to make it so simple that even
-* 					  untrained monkey is capable of using it. Therefore it has seemingly duplicate
-* 					  functions.
+* Note(s)       : (1) This module abstracts STM32F107VC UART.
 *
 *********************************************************************************************************
 * Notice(s)     : (1) None.
@@ -59,6 +57,7 @@
 */
 
 extern OS_Q		TermQ;
+extern OS_SEM	RxSem;
 
 
 /*
@@ -68,15 +67,13 @@ extern OS_Q		TermQ;
 */
 
 extern void USART2_Init(const uint32_t ulBaudrate);
-extern void USART2_putchar(const char c);
-extern void USART2_printf(const char *p_fmt, ...);
-extern char USART2_getc(void);
-extern void USART2_IRQHandler(void);
-
 extern void USART3_Init(const uint32_t ulBaudrate);
-extern void USART3_putchar(const char c);
-extern void USART3_printf(const char *p_fmt, ...);
-extern char USART3_getc(void);
+extern void USART2_IRQHandler(void);
+extern void USART3_IRQHandler(void);
+extern void USART_putchar(USART_TypeDef* USARTx, const char c);
+extern void USART_printf(USART_TypeDef* USARTx, const char *p_fmt, ...);
+extern char USART_getchar(USART_TypeDef* USARTx);
+
 
 
 /*

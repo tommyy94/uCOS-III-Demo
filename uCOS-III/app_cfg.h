@@ -41,8 +41,7 @@
 
 #define  APP_TASK_START_PRIO                        2
 #define  APP_TASK_MAIN_PRIO                         3
-#define  APP_TASK_SECONDARY_PRIO                    4
-#define  APP_TASK_COMM_PRIO                    		5
+#define  APP_TASK_COMM_PRIO                    		3
 
 
 /*
@@ -54,7 +53,6 @@
 
 #define  APP_TASK_START_STK_SIZE                    1024
 #define  APP_TASK_MAIN_STK_SIZE                     256
-#define  APP_TASK_SECONDARY_STK_SIZE                256
 #define  APP_TASK_COMM_STK_SIZE                		256
 
 

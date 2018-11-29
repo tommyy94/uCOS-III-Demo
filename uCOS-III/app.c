@@ -44,6 +44,9 @@
 *********************************************************************************************************
 */
 
+#define SERIAL_MAX_MSG_LEN 	255
+#define MAX_INPUTS 			128
+
 
 /*
 *********************************************************************************************************
@@ -63,7 +66,6 @@ static  OS_MUTEX    AppMutex;
 
 static  OS_TCB  AppTaskStartTCB;
 static  OS_TCB  AppTaskMainTCB;
-static  OS_TCB  AppTaskSecondaryTCB;
 static  OS_TCB  AppTaskCommTCB;
 
 
@@ -75,7 +77,6 @@ static  OS_TCB  AppTaskCommTCB;
 
 static  CPU_STK  AppTaskStartStk[APP_TASK_START_STK_SIZE];
 static  CPU_STK  AppTaskMainStk[APP_TASK_MAIN_STK_SIZE];
-static  CPU_STK  AppTaskSecondaryStk[APP_TASK_SECONDARY_STK_SIZE];
 static  CPU_STK  AppTaskCommStk[APP_TASK_COMM_STK_SIZE];
 
 
@@ -89,7 +90,6 @@ static  void  AppTaskCreate     (void);
 static  void  AppObjCreate      (void);
 static  void  AppTaskStart      (void *p_arg);
 static  void  AppTaskMain       (void *p_arg);
-static  void  AppTaskSecondary  (void *p_arg);
 static  void  AppTaskComm  		(void *p_arg);
 
 
@@ -204,34 +204,6 @@ static  void  AppTaskMain       (void *p_arg)
 {
     (void)p_arg;
     
-    OS_ERR  err;
-    
-    char msg[] = "Message passing by..";
-  
-    while(DEF_TRUE) {                                          /* Task body, always written as an infinite loop.        */
-        OSQPost((OS_Q      *)&AppQ,
-                (void      *)msg,
-                (OS_MSG_SIZE)sizeof(void *),
-                (OS_OPT     )OS_OPT_POST_FIFO,
-                (OS_ERR    *)&err);
-        if(err != OS_ERR_NONE) {
-            _Error_Handler(__FILE__, __LINE__, &err);
-        }
-        
-        OSTimeDly((OS_TICK      )10,
-                  (OS_OPT       )OS_OPT_TIME_DLY,
-                  (OS_ERR      *)&err);
-        if(err != OS_ERR_NONE) {
-            _Error_Handler(__FILE__, __LINE__, &err);
-        }
-    }
-}
-
-
-static  void  AppTaskSecondary  (void *p_arg)
-{
-    (void)p_arg;
-    
     OS_ERR        err;
     CPU_TS        ts;
     CPU_TS        ts_delta;
@@ -248,10 +220,10 @@ static  void  AppTaskSecondary  (void *p_arg)
         if(err != OS_ERR_NONE) {
             _Error_Handler(__FILE__, __LINE__, &err);
         }
-        
+
         ts_delta = OS_TS_GET() - ts;
 
-		USART3_printf("%s\r\n", p_msg);
+		USART_printf(USART3, "%s\r\n", p_msg);
 
 		OSMutexPend((OS_MUTEX   *)&AppMutex,
 					(OS_TICK     )0,
@@ -279,7 +251,6 @@ static  void  AppTaskSecondary  (void *p_arg)
 }
 
 
-#define MAX_INPUTS 			128
 static  void  AppTaskComm	    (void *p_arg)
 {
     (void)p_arg;
@@ -287,41 +258,57 @@ static  void  AppTaskComm	    (void *p_arg)
     OS_ERR        	err;
     CPU_TS        	ts;
     CPU_TS        	ts_delta;
-    OS_MSG_SIZE	  	termMsg_size;
-    void          	*p_termMsg;
+
+    char 		  	cInput;
+    uint8_t			iIndex = 0;
+    char   			cName[MAX_INPUTS+1] = {'\0'};
 
     while(DEF_TRUE) {                                          /* Task body, always written as an infinite loop.        */
-        p_termMsg = OSQPend((OS_Q           *)&TermQ,
-                        	(OS_TICK         )0,
-							(OS_OPT          )OS_OPT_PEND_BLOCKING,
-							(OS_MSG_SIZE    *)&termMsg_size,
-							(CPU_TS         *)&ts,
-							(OS_ERR         *)&err);
-        if(err != OS_ERR_NONE)
-        {
-            _Error_Handler(__FILE__, __LINE__, &err);
-        }
-
-		OSMutexPend((OS_MUTEX   *)&AppMutex,
-					(OS_TICK     )0,
-					(OS_OPT      )OS_OPT_PEND_BLOCKING,
-					(CPU_TS     *)&ts,
-					(OS_ERR     *)&err);
+    	/* Wait until character received from serial port */
+    	OSSemPend((OS_SEM	*)&RxSem,
+    			  (OS_TICK	 )0,
+    			  (OS_OPT	 )OS_OPT_POST_1,
+				  (CPU_TS	*)&ts,
+				  (OS_ERR	*)&err);
 		if(err != OS_ERR_NONE) {
 			_Error_Handler(__FILE__, __LINE__, &err);
 		}
 
-		LCD_goto_XY(1, 3);
-		LCD_printf("%s", p_termMsg);
+		/* Read the character from terminal */
+		cInput = USART_getchar(USART2);
 
-		OSMutexPost((OS_MUTEX   *)&AppMutex,
-					(OS_OPT      )OS_OPT_POST_NONE,
-					(OS_ERR     *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
+		/* Roll back the array if it's full */
+		if(iIndex >= MAX_INPUTS)
+		{
+			/* Insert character to the array
+			 * and reset index
+			 */
+			cName[iIndex] = cInput;
+			iIndex = 0;
+		}
+		/* Else read character to the array */
+		else
+		{
+			/* Insert character to the array
+			 * and increment index by one
+			 */
+			cName[iIndex] = cInput;
+			iIndex++;
 		}
 
-        ts_delta = OS_TS_GET() - ts;
+		/* Forward if ENTER was sent */
+		if(cInput == '\r')
+		{
+			/* Forward the message to queue */
+	        OSQPost((OS_Q      *)&AppQ,
+	                (void      *)cName,
+	                (OS_MSG_SIZE)sizeof(void *),
+	                (OS_OPT     )OS_OPT_POST_FIFO,
+	                (OS_ERR    *)&err);
+	        if(err != OS_ERR_NONE) {
+	            _Error_Handler(__FILE__, __LINE__, &err);
+	        }
+		}
 
         OSTimeDly((OS_TICK      )10,
                   (OS_OPT       )OS_OPT_TIME_DLY,
@@ -363,23 +350,6 @@ static  void  AppTaskCreate (void)
             _Error_Handler(__FILE__, __LINE__, &err);
     }
     
-    OSTaskCreate((OS_TCB         *)&AppTaskSecondaryTCB,
-                 (CPU_CHAR       *)"App Task Secondary",
-                 (OS_TASK_PTR     )AppTaskSecondary,
-                 (void           *)0,
-                 (OS_PRIO         )APP_TASK_SECONDARY_PRIO,
-                 (CPU_STK        *)&AppTaskSecondaryStk[0],
-                 (CPU_STK_SIZE    )APP_TASK_SECONDARY_STK_SIZE / 10u,
-                 (CPU_STK_SIZE    )APP_TASK_SECONDARY_STK_SIZE,
-                 (OS_MSG_QTY      )5u,
-                 (OS_TICK         )0u,
-                 (void           *)0,
-                 (OS_OPT          )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
-                 (OS_ERR         *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
-
     OSTaskCreate((OS_TCB         *)&AppTaskCommTCB,
                  (CPU_CHAR       *)"App Task Communication",
                  (OS_TASK_PTR     )AppTaskComm,
@@ -437,4 +407,9 @@ static  void  AppObjCreate (void)
     if(err != OS_ERR_NONE) {
         _Error_Handler(__FILE__, __LINE__, &err);
     }
+
+    OSSemCreate((OS_SEM	   *)&RxSem,
+    			(CPU_CHAR  *)"RX Semaphore",
+				(OS_SEM_CTR	)0,
+				(OS_ERR	   *)&err);
 }
