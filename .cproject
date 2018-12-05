@@ -19,7 +19,7 @@
 							<option id="com.atollic.truestudio.toolchain_options.mcu.1405832597" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu" useByScannerDiscovery="false" value="STM32F107VC" valueType="string"/>
 							<option id="com.atollic.truestudio.toolchain_options.vendor.1877202838" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor" useByScannerDiscovery="false" value="STMicroelectronics" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.debug.toolchain.platform.1149215559" isAbstract="false" name="Debug platform" osList="all" superClass="com.atollic.truestudio.exe.debug.toolchain.platform"/>
-							<builder buildPath="${workspace_loc:/uCOS-III-Demo}/Debug" customBuilderProperties="toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.1.0\\ARMTools\\bin|toolChainpathType=1|" id="com.atollic.truestudio.mbs.builder1.632366617" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.atollic.truestudio.mbs.builder1"/>
+							<builder buildPath="${workspace_loc:/uCOS-III-Demo}/Debug" customBuilderProperties="toolChainpathType=1|toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.1.0\\ARMTools\\bin|" id="com.atollic.truestudio.mbs.builder1.632366617" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.atollic.truestudio.mbs.builder1"/>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.as.665226982" name="Assembler" superClass="com.atollic.truestudio.exe.debug.toolchain.as">
 								<option id="com.atollic.truestudio.common_options.target.fpucore.134492582" name="FPU" superClass="com.atollic.truestudio.common_options.target.fpucore" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.fpucore.None" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.common_options.target.instr_set.3980568" name="Instruction set" superClass="com.atollic.truestudio.common_options.target.instr_set" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.instr_set.thumb" valueType="enumerated"/>
@@ -40,7 +40,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uC-LIB}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uC-LIB/Ports/ARM-Cortex-M3/GNU}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uCOS-III}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uCOS-III/User}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uCOS-III/Source}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uCOS-III/Drivers/GLCD}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uCOS-III-Demo/uCOS-III/Drivers/I2C}&quot;"/>
@@ -54,7 +53,7 @@
 								<option id="com.atollic.truestudio.gcc.misc.otherflags.1485859290" name="Other options" superClass="com.atollic.truestudio.gcc.misc.otherflags" useByScannerDiscovery="false" value="-mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float -mfix-cortex-m3-ldrd" valueType="string"/>
 								<option id="com.atollic.truestudio.exe.debug.toolchain.gcc.optimization.level.1229287953" name="Optimization Level" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc.optimization.level" useByScannerDiscovery="false" value="com.atollic.truestudio.gcc.optimization.level.0g" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.exe.debug.toolchain.gcc.debug.info.1961689208" name="Debug Level" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc.debug.info" useByScannerDiscovery="false" value="com.atollic.truestudio.gcc.debug.info.3" valueType="enumerated"/>
-								<option id="com.atollic.truestudio.gcc.warnings.extra.1708168223" superClass="com.atollic.truestudio.gcc.warnings.extra" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="com.atollic.truestudio.gcc.warnings.extra.1708168223" name="Enable extra warning flags" superClass="com.atollic.truestudio.gcc.warnings.extra" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="com.atollic.truestudio.gcc.input.25683080" superClass="com.atollic.truestudio.gcc.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.ld.580997808" name="C Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ld"/>
@@ -62,8 +61,8 @@
 								<option id="com.atollic.truestudio.common_options.target.fpucore.1637587706" name="FPU" superClass="com.atollic.truestudio.common_options.target.fpucore" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.fpucore.None" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.common_options.target.instr_set.1134874176" name="Instruction set" superClass="com.atollic.truestudio.common_options.target.instr_set" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.instr_set.thumb" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.gpp.misc.otherflags.915754440" name="Other options" superClass="com.atollic.truestudio.gpp.misc.otherflags" useByScannerDiscovery="false" value="-mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float -mfix-cortex-m3-ldrd" valueType="string"/>
-								<option id="com.atollic.truestudio.exe.debug.toolchain.gpp.optimization.level.113366364" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.optimization.level" useByScannerDiscovery="false" value="com.atollic.truestudio.gpp.optimization.level.0g" valueType="enumerated"/>
-								<option id="com.atollic.truestudio.exe.debug.toolchain.gpp.debug.info.45584448" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.debug.info" useByScannerDiscovery="false" value="com.atollic.truestudio.gpp.debug.info.3" valueType="enumerated"/>
+								<option id="com.atollic.truestudio.exe.debug.toolchain.gpp.optimization.level.113366364" name="Optimization Level" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.optimization.level" useByScannerDiscovery="false" value="com.atollic.truestudio.gpp.optimization.level.0g" valueType="enumerated"/>
+								<option id="com.atollic.truestudio.exe.debug.toolchain.gpp.debug.info.45584448" name="Debug Level" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.debug.info" useByScannerDiscovery="false" value="com.atollic.truestudio.gpp.debug.info.3" valueType="enumerated"/>
 								<inputType id="com.atollic.truestudio.gpp.input.1850435500" superClass="com.atollic.truestudio.gpp.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.ldcc.1250331972" name="C++ Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ldcc">
