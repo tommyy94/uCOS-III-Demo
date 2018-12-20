@@ -47,6 +47,14 @@
 #define SERIAL_MAX_MSG_LEN 	255
 #define MAX_INPUTS 			128
 
+#define  APP_TEST_FAULT(err, err_code) 						\
+	do {													\
+		if ((err) != (err_code)) 							\
+		{  													\
+			_Error_Handler(__FILE__, __LINE__, err_code);	\
+		}                                					\
+	} while(0)
+
 
 /*
 *********************************************************************************************************
@@ -146,9 +154,7 @@ int  main (void)
                  (void       *)0,
                  (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                  (OS_ERR     *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 
     OSStart(&err);                                              /* Start multitasking (i.e. give control to uC/OS-III). */
 }
@@ -188,9 +194,7 @@ static  void  StartupTask      (void *p_arg)
 
 #if OS_CFG_STAT_TASK_EN > 0u
     OSStatTaskCPUUsageInit(&err);                               /* Compute CPU capacity with no task running            */
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 #endif
     
     CreateObjects();                                             /* Create kernel objects (semaphore, queue, etc.)       */
@@ -202,9 +206,7 @@ static  void  StartupTask      (void *p_arg)
     
     OSTaskDel((OS_TCB   *)&StartupTaskTCB,                     	 /* Delete task because its work is complete             */
               (OS_ERR   *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
     
     while (DEF_TRUE) {
         ;                                                       /* Should not get here!                                 */
@@ -241,9 +243,7 @@ static  void  MainTask       (void *p_arg)
 									(OS_MSG_SIZE    *)&mainMsg_size,
 									(CPU_TS         *)NULL,
 									(OS_ERR         *)&err);
-        if(err != OS_ERR_NONE) {
-            _Error_Handler(__FILE__, __LINE__, &err);
-        }
+        APP_TEST_FAULT(err, OS_ERR_NONE);
 
 		USART_printf(USART3, "%s\r\n", p_msg);
 
@@ -252,9 +252,7 @@ static  void  MainTask       (void *p_arg)
 					(OS_OPT      )OS_OPT_PEND_BLOCKING,
 					(CPU_TS     *)NULL,
 					(OS_ERR     *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+	    APP_TEST_FAULT(err, OS_ERR_NONE);
 
         LCD_goto_XY(1, 1);
         LCD_printf("%s", p_msg);
@@ -263,16 +261,12 @@ static  void  MainTask       (void *p_arg)
         OSMutexPost((OS_MUTEX   *)&LcdMutex,
 					(OS_OPT      )OS_OPT_POST_NONE,
 					(OS_ERR     *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+        APP_TEST_FAULT(err, OS_ERR_NONE);
 
         OSTimeDly((OS_TICK      )10,
                   (OS_OPT       )OS_OPT_TIME_DLY,
                   (OS_ERR      *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+        APP_TEST_FAULT(err, OS_ERR_NONE);
     }
 }
 
@@ -297,7 +291,6 @@ static  void  CommTask	    (void *p_arg)
     (void)p_arg;
 
     OS_ERR        	err;
-
     char 		  	cInput;
     char   			cName[MAX_INPUTS+1] = {'\0'};
 
@@ -308,9 +301,7 @@ static  void  CommTask	    (void *p_arg)
     			  (OS_OPT	 )OS_OPT_POST_1,
 				  (CPU_TS	*)NULL,
 				  (OS_ERR	*)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+        APP_TEST_FAULT(err, OS_ERR_NONE);
 
 		/* Read the character from terminal */
 		cInput = USART_getchar(USART2);
@@ -327,17 +318,13 @@ static  void  CommTask	    (void *p_arg)
 						(OS_MSG_SIZE)sizeof(void *),
 						(OS_OPT     )OS_OPT_POST_FIFO,
 						(OS_ERR    *)&err);
-	        if(err != OS_ERR_NONE) {
-	            _Error_Handler(__FILE__, __LINE__, &err);
-	        }
+	        APP_TEST_FAULT(err, OS_ERR_NONE);
 		}
 
         OSTimeDly((OS_TICK      )10,
                   (OS_OPT      	)OS_OPT_TIME_DLY,
                   (OS_ERR      *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+        APP_TEST_FAULT(err, OS_ERR_NONE);
     }
 }
 
@@ -371,30 +358,26 @@ static  void  AnalogTask	(void *p_arg)
 					(OS_OPT      )OS_OPT_PEND_BLOCKING,
 					(CPU_TS     *)NULL,
 					(OS_ERR     *)&err);
-		if(err != OS_ERR_NONE && (err != OS_ERR_TIMEOUT)) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+		APP_TEST_FAULT(err, (OS_ERR_NONE && OS_ERR_TIMEOUT));
 
-		/* TODO: Figure out why variable ADC_Result won't get printed */
+
+		/* TODO: Figure out why LCD_printf (and GLCD_printf) won't print integers */
         LCD_goto_XY(1, 4);
         LCD_printf("ADC1: %u", ADC_Result);
 
         OSMutexPost((OS_MUTEX   *)&LcdMutex,
 				(OS_OPT      )OS_OPT_POST_NONE,
 				(OS_ERR     *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+        APP_TEST_FAULT(err, OS_ERR_NONE);
 
+		/* 100 ms delay between readings */
 		OSTimeDlyHMSM((CPU_INT16U 	)0,
 					  (CPU_INT16U 	)0,
 					  (CPU_INT16U 	)0,
 					  (CPU_INT16U 	)100,
 	                  (OS_OPT      	)OS_OPT_TIME_HMSM_STRICT,
 	                  (OS_ERR      *)&err);
-		if(err != OS_ERR_NONE) {
-			_Error_Handler(__FILE__, __LINE__, &err);
-		}
+	    APP_TEST_FAULT(err, OS_ERR_NONE);
 	}
 }
 
@@ -428,9 +411,7 @@ static  void  CreateTasks (void)
                  (void           *)0,
                  (OS_OPT          )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                  (OS_ERR         *)&err);
-    if(err != OS_ERR_NONE) {
-            _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
     
     OSTaskCreate((OS_TCB         *)&CommTaskTCB,
                  (CPU_CHAR       *)"Communication Task",
@@ -445,9 +426,7 @@ static  void  CreateTasks (void)
                  (void           *)0,
                  (OS_OPT          )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                  (OS_ERR         *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 
     OSTaskCreate((OS_TCB         *)&AnalogTaskTCB,
                  (CPU_CHAR       *)"Analog Task",
@@ -462,9 +441,7 @@ static  void  CreateTasks (void)
                  (void           *)0,
                  (OS_OPT          )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                  (OS_ERR         *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 }
 
 
@@ -487,17 +464,13 @@ static  void  CreateObjects (void)
     OSMutexCreate((OS_MUTEX  *)&LcdMutex,
                   (CPU_CHAR  *)"LCD Mutex",
                   (OS_ERR    *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 
     OSSemCreate((OS_SEM	   *)&RxSem,
     			(CPU_CHAR  *)"Terminal RX Binary Semaphore",
 				(OS_SEM_CTR	)0,
 				(OS_ERR	   *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
+    APP_TEST_FAULT(err, OS_ERR_NONE);
 }
 
 
