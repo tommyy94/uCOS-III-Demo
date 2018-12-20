@@ -490,7 +490,7 @@ void 		_Error_Handler     			 (char 			*file,
 										  OS_ERR 		*p_err)
 {
 	/* Use debug view to read variables */
-	__ASM volatile("bkpt 255");
+	__BKPT();
 
     while (1)
     {

@@ -54,8 +54,7 @@
 *********************************************************************************************************
 */
 
-static  OS_Q        AppQ;
-static  OS_MUTEX    AppMutex;
+static  OS_MUTEX    LcdMutex;
 
 
 /*
@@ -64,9 +63,10 @@ static  OS_MUTEX    AppMutex;
 *********************************************************************************************************
 */
 
-static  OS_TCB  AppTaskStartTCB;
-static  OS_TCB  AppTaskMainTCB;
-static  OS_TCB  AppTaskCommTCB;
+static  OS_TCB  StartupTaskTCB;
+static  OS_TCB  MainTaskTCB;
+static  OS_TCB  CommTaskTCB;
+static  OS_TCB	AnalogTaskTCB;
 
 
 /*
@@ -75,9 +75,22 @@ static  OS_TCB  AppTaskCommTCB;
 *********************************************************************************************************
 */
 
-static  CPU_STK  AppTaskStartStk[APP_TASK_START_STK_SIZE];
-static  CPU_STK  AppTaskMainStk[APP_TASK_MAIN_STK_SIZE];
-static  CPU_STK  AppTaskCommStk[APP_TASK_COMM_STK_SIZE];
+static  CPU_STK  StartupTaskStk[STARTUP_TASK_STK_SIZE];
+static  CPU_STK  MainTaskStk[MAIN_TASK_STK_SIZE];
+static  CPU_STK  CommTaskStk[COMM_TASK_STK_SIZE];
+static	CPU_STK  AnalogTaskStk[ANALOG_TASK_STK_SIZE];
+
+
+/*
+*********************************************************************************************************
+*                                                TASKS
+*********************************************************************************************************
+*/
+
+static  void  StartupTask      	(void *p_arg);
+static  void  MainTask       	(void *p_arg);
+static  void  CommTask  		(void *p_arg);
+static  void  AnalogTask		(void *p_arg);
 
 
 /*
@@ -86,11 +99,9 @@ static  CPU_STK  AppTaskCommStk[APP_TASK_COMM_STK_SIZE];
 *********************************************************************************************************
 */
 
-static  void  AppTaskCreate     (void);
-static  void  AppObjCreate      (void);
-static  void  AppTaskStart      (void *p_arg);
-static  void  AppTaskMain       (void *p_arg);
-static  void  AppTaskComm  		(void *p_arg);
+static  void  CreateTasks     	(void);
+static  void  CreateObjects     (void);
+static 	void  StringAppend		(char cName[], char cInput);
 
 
 /*
@@ -120,14 +131,16 @@ int  main (void)
 
     USART3_Init(115200);										/* Init serial (USART3) communications					*/
 
-    OSTaskCreate((OS_TCB     *)&AppTaskStartTCB,                /* Create the start task                                */
-                 (CPU_CHAR   *)"App Task Start",
-                 (OS_TASK_PTR )AppTaskStart,
+	ADC1_Configuration();										/* Init Analog-to-Digital Converter (ADC1)				*/
+
+    OSTaskCreate((OS_TCB     *)&StartupTaskTCB,                 /* Create the startup task                              */
+                 (CPU_CHAR   *)"Startup Task",
+                 (OS_TASK_PTR )StartupTask,
                  (void       *)0,
-                 (OS_PRIO     )APP_TASK_START_PRIO,
-                 (CPU_STK    *)&AppTaskStartStk[0],
-                 (CPU_STK_SIZE)APP_TASK_START_STK_SIZE / 10u,
-                 (CPU_STK_SIZE)APP_TASK_START_STK_SIZE,
+                 (OS_PRIO     )STARTUP_TASK_PRIO,
+                 (CPU_STK    *)&StartupTaskStk[0],
+                 (CPU_STK_SIZE)STARTUP_TASK_STK_SIZE / 10u,
+                 (CPU_STK_SIZE)STARTUP_TASK_STK_SIZE,
                  (OS_MSG_QTY  )5u,
                  (OS_TICK     )0u,
                  (void       *)0,
@@ -145,10 +158,9 @@ int  main (void)
 *********************************************************************************************************
 *                                          STARTUP TASK
 *
-* Description : This is an example of a startup task.  As mentioned in the book's text, you MUST
-*               initialize the ticker only once multitasking has started.
+* Description : This is an startup task.
 *
-* Arguments   : p_arg   is the argument passed to 'AppTaskStart()' by 'OSTaskCreate()'.
+* Arguments   : p_arg   Unused.
 *
 * Returns     : none
 *
@@ -157,7 +169,7 @@ int  main (void)
 *********************************************************************************************************
 */
 
-static  void  AppTaskStart      (void *p_arg)
+static  void  StartupTask      (void *p_arg)
 {
    (void)p_arg;
    
@@ -181,14 +193,14 @@ static  void  AppTaskStart      (void *p_arg)
     }
 #endif
     
-    AppObjCreate();                                             /* Create kernel objects (semaphore, queue, etc.)       */
-    AppTaskCreate();                                            /* Create application tasks                             */
+    CreateObjects();                                             /* Create kernel objects (semaphore, queue, etc.)       */
+    CreateTasks();                                            	 /* Create application tasks                             */
     
 #ifdef CPU_CFG_INT_DIS_MEAS_EN
     CPU_IntDisMeasMaxCurReset();
 #endif
     
-    OSTaskDel((OS_TCB   *)&AppTaskStartTCB,                     /* Delete task because its work is complete             */
+    OSTaskDel((OS_TCB   *)&StartupTaskTCB,                     	 /* Delete task because its work is complete             */
               (OS_ERR   *)&err);
     if(err != OS_ERR_NONE) {
         _Error_Handler(__FILE__, __LINE__, &err);
@@ -200,35 +212,45 @@ static  void  AppTaskStart      (void *p_arg)
 }
 
 
-static  void  AppTaskMain       (void *p_arg)
+/*
+*********************************************************************************************************
+*                                          MAIN TASK
+*
+* Description : This is the main task.
+*
+* Arguments   : p_arg   Unused.
+*
+* Returns     : none
+*
+* Notes       : 1) The first line of code is used to prevent a compiler warning because 'p_arg' is not
+*                  used.  The compiler should not generate any code for this statement.
+*********************************************************************************************************
+*/
+
+static  void  MainTask       (void *p_arg)
 {
     (void)p_arg;
     
     OS_ERR        err;
-    CPU_TS        ts;
-    CPU_TS        ts_delta;
     OS_MSG_SIZE   mainMsg_size;
-    void          *p_msg;
+    char          *p_msg;
   
     while(DEF_TRUE) {                                          /* Task body, always written as an infinite loop.        */
-        p_msg = OSQPend((OS_Q           *)&AppQ,
-                        (OS_TICK         )0,
-                        (OS_OPT          )OS_OPT_PEND_BLOCKING,
-                        (OS_MSG_SIZE    *)&mainMsg_size,
-                        (CPU_TS         *)&ts,
-                        (OS_ERR         *)&err);
+        p_msg = (char *)OSTaskQPend((OS_TICK         )0,
+									(OS_OPT          )OS_OPT_PEND_BLOCKING,
+									(OS_MSG_SIZE    *)&mainMsg_size,
+									(CPU_TS         *)NULL,
+									(OS_ERR         *)&err);
         if(err != OS_ERR_NONE) {
             _Error_Handler(__FILE__, __LINE__, &err);
         }
 
-        ts_delta = OS_TS_GET() - ts;
-
 		USART_printf(USART3, "%s\r\n", p_msg);
 
-		OSMutexPend((OS_MUTEX   *)&AppMutex,
+		OSMutexPend((OS_MUTEX   *)&LcdMutex,
 					(OS_TICK     )0,
 					(OS_OPT      )OS_OPT_PEND_BLOCKING,
-					(CPU_TS     *)&ts,
+					(CPU_TS     *)NULL,
 					(OS_ERR     *)&err);
 		if(err != OS_ERR_NONE) {
 			_Error_Handler(__FILE__, __LINE__, &err);
@@ -237,9 +259,10 @@ static  void  AppTaskMain       (void *p_arg)
         LCD_goto_XY(1, 1);
         LCD_printf("%s", p_msg);
 
-        OSMutexPost((OS_MUTEX   *)&AppMutex,
-				(OS_OPT      )OS_OPT_POST_NONE,
-				(OS_ERR     *)&err);
+
+        OSMutexPost((OS_MUTEX   *)&LcdMutex,
+					(OS_OPT      )OS_OPT_POST_NONE,
+					(OS_ERR     *)&err);
 		if(err != OS_ERR_NONE) {
 			_Error_Handler(__FILE__, __LINE__, &err);
 		}
@@ -247,20 +270,35 @@ static  void  AppTaskMain       (void *p_arg)
         OSTimeDly((OS_TICK      )10,
                   (OS_OPT       )OS_OPT_TIME_DLY,
                   (OS_ERR      *)&err);
+		if(err != OS_ERR_NONE) {
+			_Error_Handler(__FILE__, __LINE__, &err);
+		}
     }
 }
 
 
-static  void  AppTaskComm	    (void *p_arg)
+/*
+*********************************************************************************************************
+*                                          COMMUNICATION TASK
+*
+* Description : This is the communication task.
+*
+* Arguments   : p_arg   Unused.
+*
+* Returns     : none
+*
+* Notes       : 1) The first line of code is used to prevent a compiler warning because 'p_arg' is not
+*                  used.  The compiler should not generate any code for this statement.
+*********************************************************************************************************
+*/
+
+static  void  CommTask	    (void *p_arg)
 {
     (void)p_arg;
 
     OS_ERR        	err;
-    CPU_TS        	ts;
-    CPU_TS        	ts_delta;
 
     char 		  	cInput;
-    uint8_t			iIndex = 0;
     char   			cName[MAX_INPUTS+1] = {'\0'};
 
     while(DEF_TRUE) {                                          /* Task body, always written as an infinite loop.        */
@@ -268,7 +306,7 @@ static  void  AppTaskComm	    (void *p_arg)
     	OSSemPend((OS_SEM	*)&RxSem,
     			  (OS_TICK	 )0,
     			  (OS_OPT	 )OS_OPT_POST_1,
-				  (CPU_TS	*)&ts,
+				  (CPU_TS	*)NULL,
 				  (OS_ERR	*)&err);
 		if(err != OS_ERR_NONE) {
 			_Error_Handler(__FILE__, __LINE__, &err);
@@ -277,43 +315,87 @@ static  void  AppTaskComm	    (void *p_arg)
 		/* Read the character from terminal */
 		cInput = USART_getchar(USART2);
 
-		/* Roll back the array if it's full */
-		if(iIndex >= MAX_INPUTS)
-		{
-			/* Insert character to the array
-			 * and reset index
-			 */
-			cName[iIndex] = cInput;
-			iIndex = 0;
-		}
-		/* Else read character to the array */
-		else
-		{
-			/* Insert character to the array
-			 * and increment index by one
-			 */
-			cName[iIndex] = cInput;
-			iIndex++;
-		}
+		/* Append character from terminal to string */
+		StringAppend(cName, cInput);
 
 		/* Forward if ENTER was sent */
 		if(cInput == '\r')
 		{
 			/* Forward the message to queue */
-	        OSQPost((OS_Q      *)&AppQ,
-	                (void      *)cName,
-	                (OS_MSG_SIZE)sizeof(void *),
-	                (OS_OPT     )OS_OPT_POST_FIFO,
-	                (OS_ERR    *)&err);
+	        OSTaskQPost((OS_TCB	   *)&MainTaskTCB,
+	                	(void      *)cName,
+						(OS_MSG_SIZE)sizeof(void *),
+						(OS_OPT     )OS_OPT_POST_FIFO,
+						(OS_ERR    *)&err);
 	        if(err != OS_ERR_NONE) {
 	            _Error_Handler(__FILE__, __LINE__, &err);
 	        }
 		}
 
         OSTimeDly((OS_TICK      )10,
-                  (OS_OPT       )OS_OPT_TIME_DLY,
+                  (OS_OPT      	)OS_OPT_TIME_DLY,
                   (OS_ERR      *)&err);
+		if(err != OS_ERR_NONE) {
+			_Error_Handler(__FILE__, __LINE__, &err);
+		}
     }
+}
+
+
+/*
+*********************************************************************************************************
+*                                          ANALOG TASK
+*
+* Description : This is the task for analog functionalities. ADC1 is connected to kits potentiometer.
+*
+* Arguments   : p_arg   Unused.
+*
+* Returns     : none
+*
+* Notes       : 1) The first line of code is used to prevent a compiler warning because 'p_arg' is not
+*                  used.  The compiler should not generate any code for this statement.
+*********************************************************************************************************
+*/
+
+static  void  AnalogTask	(void *p_arg)
+{
+	OS_ERR err;
+
+	uint16_t ADC_Result;
+
+	while(DEF_TRUE) {                                          /* Task body, always written as an infinite loop.        */
+		ADC_Result = ADC_GetConversionValue(ADC1);
+
+		OSMutexPend((OS_MUTEX   *)&LcdMutex,
+					(OS_TICK     )500,
+					(OS_OPT      )OS_OPT_PEND_BLOCKING,
+					(CPU_TS     *)NULL,
+					(OS_ERR     *)&err);
+		if(err != OS_ERR_NONE && (err != OS_ERR_TIMEOUT)) {
+			_Error_Handler(__FILE__, __LINE__, &err);
+		}
+
+		/* TODO: Figure out why variable ADC_Result won't get printed */
+        LCD_goto_XY(1, 4);
+        LCD_printf("ADC1: %u", ADC_Result);
+
+        OSMutexPost((OS_MUTEX   *)&LcdMutex,
+				(OS_OPT      )OS_OPT_POST_NONE,
+				(OS_ERR     *)&err);
+		if(err != OS_ERR_NONE) {
+			_Error_Handler(__FILE__, __LINE__, &err);
+		}
+
+		OSTimeDlyHMSM((CPU_INT16U 	)0,
+					  (CPU_INT16U 	)0,
+					  (CPU_INT16U 	)0,
+					  (CPU_INT16U 	)100,
+	                  (OS_OPT      	)OS_OPT_TIME_HMSM_STRICT,
+	                  (OS_ERR      *)&err);
+		if(err != OS_ERR_NONE) {
+			_Error_Handler(__FILE__, __LINE__, &err);
+		}
+	}
 }
 
 
@@ -329,18 +411,18 @@ static  void  AppTaskComm	    (void *p_arg)
 *********************************************************************************************************
 */
 
-static  void  AppTaskCreate (void)
+static  void  CreateTasks (void)
 {
     OS_ERR err;
     
-    OSTaskCreate((OS_TCB         *)&AppTaskMainTCB,
-                 (CPU_CHAR       *)"App Task Main",
-                 (OS_TASK_PTR     )AppTaskMain,
+    OSTaskCreate((OS_TCB         *)&MainTaskTCB,
+                 (CPU_CHAR       *)"Main Task",
+                 (OS_TASK_PTR     )MainTask,
                  (void           *)0,
-                 (OS_PRIO         )APP_TASK_MAIN_PRIO,
-                 (CPU_STK        *)&AppTaskMainStk[0],
-                 (CPU_STK_SIZE    )APP_TASK_MAIN_STK_SIZE / 10u,
-                 (CPU_STK_SIZE    )APP_TASK_MAIN_STK_SIZE,
+                 (OS_PRIO         )MAIN_TASK_PRIO,
+                 (CPU_STK        *)&MainTaskStk[0],
+                 (CPU_STK_SIZE    )MAIN_TASK_STK_SIZE / 10u,
+                 (CPU_STK_SIZE    )MAIN_TASK_STK_SIZE,
                  (OS_MSG_QTY      )5u,
                  (OS_TICK         )0u,
                  (void           *)0,
@@ -350,14 +432,31 @@ static  void  AppTaskCreate (void)
             _Error_Handler(__FILE__, __LINE__, &err);
     }
     
-    OSTaskCreate((OS_TCB         *)&AppTaskCommTCB,
-                 (CPU_CHAR       *)"App Task Communication",
-                 (OS_TASK_PTR     )AppTaskComm,
+    OSTaskCreate((OS_TCB         *)&CommTaskTCB,
+                 (CPU_CHAR       *)"Communication Task",
+                 (OS_TASK_PTR     )CommTask,
                  (void           *)0,
-                 (OS_PRIO         )APP_TASK_COMM_PRIO,
-                 (CPU_STK        *)&AppTaskCommStk[0],
-                 (CPU_STK_SIZE    )APP_TASK_COMM_STK_SIZE / 10u,
-                 (CPU_STK_SIZE    )APP_TASK_COMM_STK_SIZE,
+                 (OS_PRIO         )COMM_TASK_PRIO,
+                 (CPU_STK        *)&CommTaskStk[0],
+                 (CPU_STK_SIZE    )COMM_TASK_STK_SIZE / 10u,
+                 (CPU_STK_SIZE    )COMM_TASK_STK_SIZE,
+                 (OS_MSG_QTY      )5u,
+                 (OS_TICK         )0u,
+                 (void           *)0,
+                 (OS_OPT          )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+                 (OS_ERR         *)&err);
+    if(err != OS_ERR_NONE) {
+        _Error_Handler(__FILE__, __LINE__, &err);
+    }
+
+    OSTaskCreate((OS_TCB         *)&AnalogTaskTCB,
+                 (CPU_CHAR       *)"Analog Task",
+                 (OS_TASK_PTR     )AnalogTask,
+                 (void           *)0,
+                 (OS_PRIO         )ANALOG_TASK_PRIO,
+                 (CPU_STK        *)&AnalogTaskStk[0],
+                 (CPU_STK_SIZE    )ANALOG_TASK_STK_SIZE / 10u,
+                 (CPU_STK_SIZE    )ANALOG_TASK_STK_SIZE,
                  (OS_MSG_QTY      )5u,
                  (OS_TICK         )0u,
                  (void           *)0,
@@ -381,35 +480,62 @@ static  void  AppTaskCreate (void)
 *********************************************************************************************************
 */
 
-static  void  AppObjCreate (void)
+static  void  CreateObjects (void)
 {
     OS_ERR err;
     
-    OSMutexCreate((OS_MUTEX  *)&AppMutex,
-                  (CPU_CHAR  *)"My AppMutex",
+    OSMutexCreate((OS_MUTEX  *)&LcdMutex,
+                  (CPU_CHAR  *)"LCD Mutex",
                   (OS_ERR    *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
-    
-    OSQCreate((OS_Q        *)&AppQ,
-              (CPU_CHAR    *)"Main queue",
-              (OS_MSG_QTY   )10,
-              (OS_ERR      *)&err);
-    if(err != OS_ERR_NONE) {
-        _Error_Handler(__FILE__, __LINE__, &err);
-    }
-
-    OSQCreate((OS_Q        *)&TermQ,
-              (CPU_CHAR    *)"Terminal queue",
-              (OS_MSG_QTY   )10,
-              (OS_ERR      *)&err);
     if(err != OS_ERR_NONE) {
         _Error_Handler(__FILE__, __LINE__, &err);
     }
 
     OSSemCreate((OS_SEM	   *)&RxSem,
-    			(CPU_CHAR  *)"RX Semaphore",
+    			(CPU_CHAR  *)"Terminal RX Binary Semaphore",
 				(OS_SEM_CTR	)0,
 				(OS_ERR	   *)&err);
+    if(err != OS_ERR_NONE) {
+        _Error_Handler(__FILE__, __LINE__, &err);
+    }
+}
+
+
+/*
+*********************************************************************************************************
+*                                      APPEND CHARACTER TO STRING
+*
+* Description:  This function appends character to end of the string.
+*
+* Arguments   : cName   String to append to
+*
+* 				cInput	Character to append
+*
+* Returns     : none
+*********************************************************************************************************
+*/
+
+static void StringAppend(char cName[], char cInput)
+{
+	/* Keep index value between function calls */
+    static uint8_t iIndex = 0;
+
+	/* Roll back the array if it's full */
+	if(iIndex >= MAX_INPUTS)
+	{
+		/* Insert character to the array
+		 * and reset index
+		 */
+		cName[iIndex] = cInput;
+		iIndex = 0;
+	}
+	/* Else read character to the array */
+	else
+	{
+		/* Insert character to the array
+		 * and increment index by one
+		 */
+		cName[iIndex] = cInput;
+		iIndex++;
+	}
 }
