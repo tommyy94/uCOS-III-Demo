@@ -205,7 +205,7 @@ void  BSP_Init (void)
 
     BSP_CPU_ClkFreq_MHz = BSP_CPU_ClkFreq() / (CPU_INT32U)1000000;
 
-    BSP_CPU_ClkFreq_MHz = BSP_CPU_ClkFreq_MHz;                  /* Surpress compiler warning BSP_CPU_ClkFreq_MHz    ... */
+    (void)BSP_CPU_ClkFreq_MHz;                  				/* Surpress compiler warning BSP_CPU_ClkFreq_MHz    ... */
                                                                 /* ... set and not used.                                */
 
 #ifdef TRACE_EN                                                 /* See project / compiler preprocessor options.         */
