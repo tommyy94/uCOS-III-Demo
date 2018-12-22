@@ -2,6 +2,9 @@
 #define ATOMIC_OPERATIONS_H_
 
 
+#include <core_cm3.h>
+
+
 static uint32_t g_CriticalSecCntr;
 
 

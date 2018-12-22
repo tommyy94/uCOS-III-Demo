@@ -197,14 +197,14 @@ static  void  StartupTask      (void *p_arg)
     APP_TEST_FAULT(err, OS_ERR_NONE);
 #endif
     
-    CreateObjects();                                             /* Create kernel objects (semaphore, queue, etc.)       */
-    CreateTasks();                                            	 /* Create application tasks                             */
+    CreateObjects();                                            /* Create kernel objects (semaphore, queue, etc.)       */
+    CreateTasks();                                            	/* Create application tasks                             */
     
 #ifdef CPU_CFG_INT_DIS_MEAS_EN
     CPU_IntDisMeasMaxCurReset();
 #endif
     
-    OSTaskDel((OS_TCB   *)&StartupTaskTCB,                     	 /* Delete task because its work is complete             */
+    OSTaskDel((OS_TCB   *)&StartupTaskTCB,                     	/* Delete task because its work is complete             */
               (OS_ERR   *)&err);
     APP_TEST_FAULT(err, OS_ERR_NONE);
     

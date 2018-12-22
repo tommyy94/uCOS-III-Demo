@@ -93,17 +93,16 @@ void USART2_Init(const uint32_t ulBaudrate)
     GPIO_InitTypeDef GPIO_InitStructure;
     USART_InitTypeDef USART_InitStructure;
 
-    // Release reset and enable clock
+    /* Release reset and enable clock */
     USART_DeInit(USART2);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
-    // GPIO Init
-    // Enable GPIO clock and release reset
+    /* Enable GPIO clock and release reset */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, DISABLE);
     GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
 
-    // Assign PD5 to UART2 (Tx)
+    /* Assign PD5 to UART2 (Tx) */
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
@@ -149,17 +148,16 @@ void USART3_Init(const uint32_t ulBaudrate)
     GPIO_InitTypeDef GPIO_InitStructure;
     USART_InitTypeDef USART_InitStructure;
 
-    // Release reset and enable clock
+    /* Release reset and enable clock */
     USART_DeInit(USART3);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 
-    // GPIO Init
-    // Enable GPIO clock and release reset
+    /* Enable GPIO clock and release reset */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, DISABLE);
     GPIO_PinRemapConfig(GPIO_FullRemap_USART3, ENABLE);
 
-    // Assign PD8 to UART3 (Tx)
+    /* Assign PD8 to UART3 (Tx) */
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
@@ -318,7 +316,7 @@ char USART_getchar(USART_TypeDef* USARTx)
 		USART_putchar(USART2, '\n');
 	}
 
-	return cInput;
+	return (cInput);
 }
 
 
