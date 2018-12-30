@@ -1054,8 +1054,8 @@ int GLCD_putchar (int c)
         default:
             // Calculate the current character base address from stream
             // and the character position
-            if((c <  pCurrFont->CharacterOffset) &&
-            (c >= pCurrFont->CharactersNuber))
+            if(((unsigned int)c <  pCurrFont->CharacterOffset) &&
+            ((unsigned int)c >= pCurrFont->CharactersNuber))
             {
                 c = 0;
             }

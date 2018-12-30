@@ -186,6 +186,8 @@ uint32_t Div = 2;
  *************************************************************************/
 void GLCD_SPI_Init(uint32_t Clk, uint32_t Width)
 {
+	/* Parameter Clk is unused for some reason */
+	(void)Clk;
 GPIO_InitTypeDef GPIO_InitStructure;
   // Enable GPIO clock and release reset
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC,

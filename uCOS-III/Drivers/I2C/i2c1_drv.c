@@ -98,6 +98,8 @@ void I2C1_EvnIntrHandler(void)
       s_Done = true;
     }
     break;
+  default:
+	break;
   }
 }
 

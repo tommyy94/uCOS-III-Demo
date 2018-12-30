@@ -346,6 +346,7 @@ static  void  CommTask	    (void *p_arg)
 
 static  void  AnalogTask	(void *p_arg)
 {
+    (void)p_arg;
 	OS_ERR err;
 
 	uint16_t ADC_Result;

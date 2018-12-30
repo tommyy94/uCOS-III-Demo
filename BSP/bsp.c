@@ -489,6 +489,11 @@ void 		_Error_Handler     			 (char 			*file,
 										  int 			line,
 										  OS_ERR 		*p_err)
 {
+	/* Supress -Wunused-parameter */
+    (void)file;
+    (void)line;
+    (void)p_err;
+
 	/* Use debug view to read variables */
 	__BKPT();
 

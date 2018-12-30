@@ -112,7 +112,8 @@ static  void  BSP_IntHandlerDummy(void);
 
 void  BSP_IntClr (CPU_DATA  int_id)
 {
-
+	/* TODO: Figure out this functions usage */
+    (void)int_id;
 }
 
 

@@ -22,7 +22,7 @@
 <stringAttribute key="com.atollic.hardwaredebug.launch.jtagDevice" value="SEGGER J-LINK"/>
 <intAttribute key="com.atollic.hardwaredebug.launch.portNumber" value="2331"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.remoteCommand" value="target extended-remote"/>
-<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F107VC microcontroller.&#13;&#10;&#13;&#10;# Set JTAG speed to 30 kHz&#13;&#10;monitor speed 30&#13;&#10;&#13;&#10;# Set GDBServer to little endian&#13;&#10;monitor endian little&#13;&#10;&#13;&#10;# Reset the chip to get to a known state.&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set auto JTAG speed&#13;&#10;monitor speed auto&#13;&#10;&#13;&#10;# Setup GDB FOR FASTER DOWNLOADS&#13;&#10;set remote memory-write-packet-size 1024&#13;&#10;set remote memory-write-packet-size fixed&#13;&#10;&#13;&#10;# Enable flash download&#13;&#10;monitor flash download = 1&#13;&#10;&#13;&#10;# Flash device&#13;&#10;monitor flash device = STM32F107VC&#13;&#10;&#13;&#10;# Load the program executable&#13;&#10;load&#13;&#10;&#13;&#10;# Reset to known state&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set a breakpoint at main().&#13;&#10;tbreak main&#13;&#10;&#13;&#10;set *0xE000ED24 = 0x70000&#13;&#10;&#13;&#10;# Run to the breakpoint.&#13;&#10;continue&#13;&#10;&#13;&#10;# Enable semihosting&#13;&#10;monitor arm semihosting enable "/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F107VC microcontroller.&#13;&#10;&#13;&#10;# Set JTAG speed to 30 kHz&#13;&#10;monitor speed 30&#13;&#10;&#13;&#10;# Set GDBServer to little endian&#13;&#10;monitor endian little&#13;&#10;&#13;&#10;# Reset the chip to get to a known state.&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set auto JTAG speed&#13;&#10;monitor speed auto&#13;&#10;&#13;&#10;# Setup GDB FOR FASTER DOWNLOADS&#13;&#10;set remote memory-write-packet-size 1024&#13;&#10;set remote memory-write-packet-size fixed&#13;&#10;&#13;&#10;# Enable flash download&#13;&#10;monitor flash download = 1&#13;&#10;&#13;&#10;# Flash device&#13;&#10;monitor flash device = STM32F107VC&#13;&#10;&#13;&#10;# Load the program executable&#13;&#10;load&#13;&#10;&#13;&#10;# Reset to known state&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set a breakpoint at main().&#13;&#10;tbreak main&#13;&#10;&#13;&#10;set *0xE000ED24 = 0x70000&#13;&#10;&#13;&#10;# Run to the breakpoint.&#13;&#10;continue&#13;&#10;"/>
 <stringAttribute key="com.atollic.hardwaredebug.launch.serverParam" value="-port 2331 -s -CPU Cortex-M -device STM32F107VC -endian little -speed 12000 -if swd -select USB=260107991 -vd"/>
 <booleanAttribute key="com.atollic.hardwaredebug.launch.startServer" value="true"/>
 <booleanAttribute key="com.atollic.hardwaredebug.launch.swd_mode" value="true"/>
@@ -55,7 +55,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/uCOS-III-Demo.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="uCOS-III-Demo"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.atollic.truestudio.exe.0"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/uCOS-III-Demo"/>
 </listAttribute>
